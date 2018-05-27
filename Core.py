@@ -1,6 +1,5 @@
 import logging
 import socket
-from TelegramSockets import TGSocket
 from MTProtoPacket import MTProxy
 from config import Config
 import select
@@ -79,4 +78,3 @@ class Clients:
 
 
 server = MTProtoProxyServer()
-tgsocket = TGSocket()

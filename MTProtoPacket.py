@@ -1,4 +1,4 @@
-from AESEncryptor import AESencryptorCTR
+from AESEncryptor import AESModeCTR
 import os
 from hashlib import sha256
 import numpy
@@ -15,10 +15,8 @@ class MTProxy:
             obf_enc_iv = obf_enc_key_bytes[39:55]  # 40 - 55 bytes [16]
             secret = (secret.encode('UTF-8'))
             obf_enc_key = sha256(b'%s%s'%(obf_enc_key,secret)).digest()
-            encryptor = AESencryptorCTR(key=obf_enc_key,
-                                        iv=obf_enc_iv,
-                                        counter=0,
-                                        number=0)
+            encryptor = AESModeCTR (key=obf_enc_key,
+                                    iv=obf_enc_iv)
             enc_data = encryptor.encrypt(raw_data)
             return obf_enc_key_bytes + enc_data
 
@@ -28,10 +26,8 @@ class MTProxy:
             obf_dec_iv = obf_dec_key_bytes[39:55]  # 40 - 55 bytes [16]
             secret = (secret.encode ('UTF-8'))
             obf_dec_key = sha256 (b'%s%s' % (obf_dec_key, secret)).digest ()
-            encryptor = AESencryptorCTR (key=obf_dec_key,
-                                         iv=obf_dec_iv,
-                                         counter=0,
-                                         number=0)
+            encryptor = AESModeCTR (key=obf_dec_key,
+                                    iv=obf_dec_iv)
             raw_data = encryptor.decrypt(enc_data[64:])
             return raw_data
 
@@ -41,10 +37,8 @@ class MTProxy:
             if secret:
                 secret = secret.encode ('UTF-8')
                 obf_dec_key = sha256 (b'%s%s' % (obf_dec_key, secret)).digest ()
-            encryptor = AESencryptorCTR(key=obf_dec_key,
-                                        iv=obf_dec_iv,
-                                        counter=0,
-                                        number=0)
+            encryptor = AESModeCTR(key=obf_dec_key,
+                                   iv=obf_dec_iv)
             raw_data = encryptor.decrypt(enc_data[64:])
             return raw_data
 
@@ -56,10 +50,8 @@ class MTProxy:
             if secret:
                 secret = secret.encode('UTF-8')
                 obf_enc_key = sha256(b'%s%s' % (obf_enc_key, secret)).digest()
-            encryptor = AESencryptorCTR(key=obf_enc_key,
-                                         iv=obf_enc_iv,
-                                         counter=0,
-                                         number=0)
+            encryptor = AESModeCTR (key=obf_enc_key,
+                                    iv=obf_enc_iv)
             enc_data = encryptor.encrypt(raw_data)
 
             return obf_enc_key_bytes + enc_data

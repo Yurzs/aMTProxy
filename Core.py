@@ -6,12 +6,11 @@ import select
 
 secret = '11111'
 
-
 class MTProtoProxyServer():
     def __init__(self, sock=None):
         if sock is None:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.bind(('10.8.0.4', 8445))
+            self.sock.bind(('192.168.1.3', 8445))
             self.sock.listen(1)
             while True:
                 (clientsocket, address) = self.sock.accept ()
@@ -39,6 +38,11 @@ class Clients:
             if ready_user[0]:
                 data_from_client = user_socket.recv (4096)
                 print ('Data from user')
+                if data_from_client== b'':
+                    user_socket.close()
+                    connected = False
+                    break
+
                 print(data_from_client)
             if ready_telegram[0]:
                 data_from_telegram = telegram.sock.recv(4096)

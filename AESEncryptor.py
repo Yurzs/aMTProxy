@@ -1,19 +1,18 @@
-from Crypto.Cipher import AES
+import pyaes
 
 
-class AESencryptorCTR:
-    def __init__(self, key,iv,counter,number):
-        self.key = key
-        self.iv = iv
-        self.cnter_cb_called = 0
-        self.counter = counter
-        self.number = number
+class AESModeCTR:
+    def __init__(self, key, iv):
+        assert isinstance(key, bytes)
+        self._aes = pyaes.AESModeOfOperationCTR(key)
 
-    def encrypt(self, raw):
-        cipher = AES.new (self.key, AES.MODE_CTR, counter=lambda :self.iv)
-        return cipher.encrypt (raw)
+        assert isinstance(iv, bytes)
+        assert len(iv) == 16
+        self._aes._counter._counter = list(iv)
 
-    def decrypt(self, enc):
-        cipher = AES.new (self.key, AES.MODE_CTR, counter=lambda :self.iv)
-        return cipher.decrypt (enc)
+    def encrypt(self, data):
+        return self._aes.encrypt(data)
+
+    def decrypt(self, data):
+        return self._aes.decrypt(data)
 

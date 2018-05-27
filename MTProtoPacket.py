@@ -1,6 +1,6 @@
 from hashlib import sha256
 import numpy
-from AesEncryptor import AESencryptor
+from AESEncryptor import AESencryptor
 
 class MTProxy():
     class MTProtoPacket():

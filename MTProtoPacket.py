@@ -1,7 +1,7 @@
+from AESEncryptor import AESencryptorCTR
+import os
 from hashlib import sha256
 import numpy
-from AESEncryptor import AESencryptor,AESencryptorCTR
-import os
 
 
 class MTProxy:
@@ -9,22 +9,25 @@ class MTProxy:
         def __init__(self):
             pass
 
-        def obfuscated2(self,raw_data):
-            obf_enc_key_bytes = os.urandom(64)
+        def obfuscated2(self,raw_data,secret):
+            obf_enc_key_bytes = bytes(os.urandom(64))
             obf_enc_key = obf_enc_key_bytes[7:39]  # 8 - 39 bytes [32]
             obf_enc_iv = obf_enc_key_bytes[39:55]  # 40 - 55 bytes [16]
+            secret = (secret.encode('UTF-8'))
+            obf_enc_key = sha256(b'%s%s'%(obf_enc_key,secret)).digest()
             encryptor = AESencryptorCTR(key=obf_enc_key,
                                         iv=obf_enc_iv,
                                         counter=0,
                                         number=0)
             enc_data = encryptor.encrypt(raw_data)
-
             return obf_enc_key_bytes + enc_data
 
-        def deobfuscated2(self,enc_data):
+        def deobfuscated2(self,enc_data,secret):
             obf_dec_key_bytes = bytes(enc_data[0:64])[::-1]
             obf_dec_key = obf_dec_key_bytes[7:39]  # 8 - 39 bytes [32]
             obf_dec_iv = obf_dec_key_bytes[39:55]  # 40 - 55 bytes [16]
+            secret = (secret.encode ('UTF-8'))
+            obf_dec_key = sha256 (b'%s%s' % (obf_dec_key, secret)).digest ()
             encryptor = AESencryptorCTR (key=obf_dec_key,
                                          iv=obf_dec_iv,
                                          counter=0,
@@ -32,9 +35,12 @@ class MTProxy:
             raw_data = encryptor.decrypt(enc_data[64:])
             return raw_data
 
-        def serverside_deobfuscated2(self, enc_data):
+        def serverside_deobfuscated2(self, enc_data,secret=None):
             obf_dec_key = enc_data[7:39]  # 8 - 39 bytes [32]
             obf_dec_iv = enc_data[39:55]  # 40 - 55 bytes [16]
+            if secret:
+                secret = secret.encode ('UTF-8')
+                obf_dec_key = sha256 (b'%s%s' % (obf_dec_key, secret)).digest ()
             encryptor = AESencryptorCTR(key=obf_dec_key,
                                         iv=obf_dec_iv,
                                         counter=0,
@@ -42,16 +48,20 @@ class MTProxy:
             raw_data = encryptor.decrypt(enc_data[64:])
             return raw_data
 
-        def serverside_obfuscated2(self, raw_data):
-            obf_enc_key_bytes = os.urandom (64)
+        def serverside_obfuscated2(self, raw_data, secret=None):
+            obf_enc_key_bytes = os.urandom(64)
             obf_enc_key = (obf_enc_key_bytes[7:39])  # 8 - 39 bytes [32]
-            obf_enc_iv = (obf_enc_key_bytes[39:55])
+            obf_enc_iv = (obf_enc_key_bytes[39:55])  # 40 - 55 bytes [16]
             obf_enc_key_bytes = obf_enc_key_bytes[::-1]
-
-            encryptor = AESencryptorCTR (key=obf_enc_key,
+            if secret:
+                secret = secret.encode('UTF-8')
+                obf_enc_key = sha256(b'%s%s' % (obf_enc_key, secret)).digest()
+            encryptor = AESencryptorCTR(key=obf_enc_key,
                                          iv=obf_enc_iv,
                                          counter=0,
                                          number=0)
-            enc_data = encryptor.encrypt (raw_data)
+            enc_data = encryptor.encrypt(raw_data)
 
             return obf_enc_key_bytes + enc_data
+
+

@@ -29,7 +29,7 @@ class TelegramSocket:
     def connect(self, host, port):
         self.sock.connect((host, port))
 
-class Clients():
+class Clients:
     def __init__(self,user_socket):
         connected = True
         telegram = TelegramSocket ()

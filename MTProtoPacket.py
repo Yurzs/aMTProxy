@@ -2,8 +2,10 @@ from hashlib import sha256
 import numpy
 from AESEncryptor import AESencryptor,AESencryptorCTR
 import os
-class MTProxy():
-    class MTProtoPacket():
+
+
+class MTProxy:
+    class MTProtoPacket:
         def __init__(self):
             pass
 

@@ -1,3 +1,2 @@
 # pyMTProxy
-Python MTProto Proxy Serverу
-pre-alpha
+Python MTProto Proxy Serverу [pre-alpha]

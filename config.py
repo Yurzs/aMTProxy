@@ -2,7 +2,7 @@
 
 
 class Config:
-    NumberOfTgSocket = 50
-    TelegramPort = 443
-    SleepTgSockets = 10
-    BufferSize = 1024 * 128
+    numberOfTgSocket = 50
+    telegramPort = 443
+    sleepTgSockets = 10
+    bufferSize = 1024 * 128

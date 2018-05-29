@@ -1,85 +1,77 @@
 import logging
 import socket
 from MTProtoPacket import MTProxy
-from config import Config
-import select
-import hexdump
-secret = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+from time import time
+from collections import deque
+import asyncio
 
+SECRET = '4b3e3c2f99046f92a61bab6775848577'
 
-class MTProtoProxyServer():
-    def __init__(self, sock=None):
-        if sock is None:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.bind(('192.168.1.3', 8445))
-            self.sock.listen(1)
-            while True:
-                (clientsocket, address) = self.sock.accept ()
-                Clients(clientsocket)
-        else:
-            self.sock = sock
+class MTProtoproxy:
+    class Server:
+        def __init__(self):
+            loop = asyncio.get_event_loop()
+            client = MTProtoproxy.Client()
+            task = asyncio.start_server( client.client_connector,
+                                        "0.0.0.0", 8445, loop=loop)
+            server = loop.run_until_complete(task)
 
+            try:
+                loop.run_forever()
+            except KeyboardInterrupt:
+                pass
 
-class TelegramSocket:
-    def __init__(self):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server.close()
+            loop.run_until_complete(server.wait_closed())
+            loop.close()
 
-    def connect(self, host, port):
-        self.sock.connect((host, port))
+    class Client:
+        async def client_connector(self,reader,writer):
+            try:
+                await self.loop(reader, writer)
+            except (asyncio.IncompleteReadError, ConnectionResetError):
+                writer.close()
 
-class Clients:
-    def __init__(self,user_socket):
-        connected = True
-        telegram = TelegramSocket ()
-        telegram.connect('149.154.175.100', Config.telegramPort)
-        while connected:
-            ready_user = select.select([user_socket], [], [], 0.25)
-            ready_telegram = select.select([telegram.sock], [], [], 0.25)
-            if ready_user[0]:
-                data_from_client = user_socket.recv (4096)
-                if data_from_client == b'':
-                    user_socket.close()
-                    connected = False
-                    break
-            elif ready_telegram[0]:
-                data_from_telegram = telegram.sock.recv(4096)
-            if not ready_telegram[0] and ready_user[0]:
-                continue
-            if not data_from_client:
-                if not data_from_telegram:
-                    break
-                else:
-                    print('Recieved from telegram')
-                    print(data_from_telegram)
-                    print(hexdump.hexdump(data_from_telegram))
-                    raw_data = MTProxy.MTProtoPacket.from_telegram_deobfuscated2(self=None,
-                                                                              enc_data=data_from_telegram)
-                    print('RAW telegram data')
-                    print(raw_data[55:60])
-                    print(hexdump.hexdump(raw_data))
-                    encrypted_data = MTProxy.MTProtoPacket.to_client_obfuscated2(self=None,
-                                                                                  raw_data=raw_data,
-                                                                                  secret=secret)
-                    user_socket.send(encrypted_data)
-                    print('Sent this to client')
-                    print(hexdump.hexdump(encrypted_data))
-                    print(len(encrypted_data))
-                    ready_telegram = [False]
+        async def sockets_connector(self,reader,writer,decryptor,encryptor):
+            try:
+                while True:
+                    data = reader.read()
+                    if not data:
+                        writer.write_eof()
+                        await writer.drain()
+                        writer.close()
+                        raise Exception
+                    else:
+                        dec_data = decryptor.decrypt(data)
+                        data = encryptor.encrypt(dec_data)
+                        writer.write(data)
+                        await writer.drain()
+            except (ConnectionResetError, BrokenPipeError, OSError,
+                    AttributeError):
+                writer.close()
+            except Exception:
+                return
 
-            else:
-                print('Recieved from client')
-                raw_data = MTProxy.MTProtoPacket.from_client_deobfuscated2(self=None,
-                                                               enc_data=data_from_client,
-                                                               secret=secret)
-                print('RAW client data')
-                print(hexdump.hexdump(raw_data))
-                encrypted_data = MTProxy.MTProtoPacket.to_telegram_obfuscated2(self=None,
-                                                                              raw_data=raw_data)
-                print(telegram.sock.send(encrypted_data))
-                print('Sent this to telegram')
-                print(len(encrypted_data))
-                print(hexdump.hexdump (encrypted_data))
-                ready_user = [False]
+        async def loop(self, cli_reader, cli_writer):
+            cli_data = await MTProxy.MTProtoPacket.from_client_to_telegram(self = None,
+                                                                           enc_data=await cli_reader.read(),
+                                                                           secret=SECRET)
+            if not cli_data:
+                cli_writer.close()
+                raise Exception
 
+            dc, cli_decryptor, cli_encryptor = cli_data
 
-server = MTProtoProxyServer()
+            tg_data = await MTProxy.MTProtoPacket.from_telegram_to_client(self=None,
+                                                                          dc=dc,
+                                                                          secret=SECRET)
+            if not tg_data:
+                cli_writer.close()
+
+            tg_encryptor, tg_decryptor, tg_reader, tg_writer = tg_data
+
+            asyncio.ensure_future(self.sockets_connector(tg_reader, cli_writer, tg_decryptor, cli_encryptor))
+            asyncio.ensure_future(self.sockets_connector(cli_reader, tg_writer, cli_decryptor, tg_encryptor))
+
+if __name__ == "__main__":
+    MTProtoproxy.Server()

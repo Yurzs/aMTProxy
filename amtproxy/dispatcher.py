@@ -1,7 +1,7 @@
-from encryption.crypto import Encryptor, Decryptor
-from config import secret, telegram_ips, mtproto_footprint, obf_footprint
-from exceptions import WrongServerID
-from protocols.telegram import TelegramProtocol
+from amtproxy.encryption.crypto import Encryptor, Decryptor
+from amtproxy.config import secret, telegram_ips, mtproto_footprint, obf_footprint
+from amtproxy.exceptions import WrongServerID
+from amtproxy.protocols.telegram import TelegramProtocol
 
 
 class Dispatcher:

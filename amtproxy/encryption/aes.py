@@ -1,5 +1,6 @@
 import pyaes
 
+
 class AES_CTR:
     def __init__(self, key, iv):
         assert isinstance(key, bytes), 'Key should be instance of bytes'

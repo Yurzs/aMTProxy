@@ -1,6 +1,6 @@
 from hashlib import sha256
 
-from .aes import AES_CTR
+from amtproxy.encryption.aes import AES_CTR
 
 
 class DecryptionKey:

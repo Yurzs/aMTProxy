@@ -1,5 +1,5 @@
 import asyncio
-from dispatcher import Dispatcher
+from amtproxy.dispatcher import Dispatcher
 
 
 class RealProtocol(asyncio.Protocol):

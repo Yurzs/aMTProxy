@@ -1,18 +1,22 @@
 import asyncio
-from amtproxy.dispatcher import Dispatcher
+from ..dispatcher import Dispatcher
 
 
 class RealProtocol(asyncio.Protocol):
-    def __init__(self, loop, *args, **kwargs):
+    transport: asyncio.transports.BaseTransport
+    task: asyncio.Task = None
+
+    def __init__(self, loop, secret, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.loop = loop
-        self.dispatcher = Dispatcher(loop, self)
+        self.dispatcher = Dispatcher(loop, self, secret)
 
     def connection_made(self, transport):
         self.transport = transport
 
+
     def data_received(self, data):
-        task = asyncio.Task(self.async_handler(data), loop=self.loop)
+        self.task = asyncio.Task(self.async_handler(data), loop=self.loop)
 
 
     @asyncio.coroutine
@@ -20,6 +24,8 @@ class RealProtocol(asyncio.Protocol):
         return (yield from self.dispatcher.handle(data))
 
     def connection_lost(self, exc) -> None:
+        if self.task:
+            self.task.cancel()
         try:
             self.dispatcher.telegram_transport.close()
         except AttributeError:

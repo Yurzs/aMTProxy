@@ -4,5 +4,5 @@ class ProxyBaseException(Exception):
     pass
 
 
-class WrongServerID(ProxyBaseException):
+class WrongSecret(ProxyBaseException):
     pass

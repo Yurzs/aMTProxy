@@ -11,7 +11,7 @@ os.chdir('../')
 
 setuptools.setup(
     name="aMTProxy",
-    version="0.1.5",
+    version="0.2",
     author="Yury (Yurzs)",
     author_email="dev@best-service.online",
     description="Async python MTProxy server",
